@@ -1,7 +1,8 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw, ImageFont
+import math
 
 
 class Application:
@@ -9,7 +10,7 @@ class Application:
         self.root = root
         self.size = (700, 700)
         self.setup_gui()
-        self.x1, self.y1 = 0, 0
+        self.x1, self.x2, self.y2, self.y1 = 0, 0, 0, 0
         self.line1 = 0
         self.root.config(menu=self.menubar)
 
@@ -33,18 +34,14 @@ class Application:
         if self.img.size[0] > self.size[0]:
             wpercent = ((self.size[0]) / float(self.img.size[0]))
             hsize = int((float(self.img.size[1]) * float(wpercent)))
-            print("wprecent:", wpercent)
-            print("hsize:", hsize)
             self.img = self.img.resize((self.size[0], hsize), Image.ANTIALIAS)
         elif self.img.size[1] > self.size[1]:
             hpercent = ((self.size[1]) / float(self.img.size[1]))
             wsize = int((float(self.img.size[0]) * float(hpercent)))
-            print("hprecent:", hpercent)
-            print("wsize:", wsize)
             self.img = self.img.resize((wsize, self.size[1]), Image.ANTIALIAS)
         self.meme = ImageTk.PhotoImage(self.img)
         self.canvas.delete(ALL)
-        self.canvas.create_image(self.size[0]/2, self.size[1]/2, anchor=CENTER, image=self.meme)
+        self.canvas.create_image(self.size[0]/2.0, self.size[1]/2.0, anchor=CENTER, image=self.meme)
 
     def close_image(self):
         self.canvas.delete(ALL)
@@ -68,14 +65,59 @@ class Application:
             self.line4 = self.canvas.create_line(self.x1, event.y, event.x, event.y, dash=(12, 7), width=2)
 
     def draw_final_rect(self, event):
-        self.line1
-        self.line2
-        self.line3
-        self.line4
+        self.x2, self.y2 = event.x, event.y
+        if self.x2 < self.x1:
+            self.x1, self.x2 = self.x2, self.x1
+        if self.y2 < self.y1:
+            self.y1, self.y2 = self.y2, self.y1
+        width, height = (self.x2 - self.x1), (self.y2 - self.y1)
+        print("w", width, "h", height)
+        if width < 30 or height < 30:
+            messagebox.showwarning("Small content area", "Content area is too small, please select larger area")
+        else:
+            font_size = 40
+            font_type = ImageFont.truetype("../MemeCreatorBot/impact.ttf", font_size)
+
+            im = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+            draw = ImageDraw.Draw(im)
+            text = "testing text testing text testing text"
+            modifiedtext = ''
+            words = text.split()
+            currstr = ''
+            if draw.textsize(text, font=font_type)[0] < width:
+                modifiedtext = text
+            else:
+                for i in words:
+                    if draw.textsize(currstr, font=font_type)[0] + draw.textsize(i, font=font_type)[0] < width:
+                        currstr += i + ' '
+                    else:
+                        modifiedtext += currstr + '\n'
+                        currstr = i + ' '
+                    if words.index(i) == len(words) - 1:
+                        modifiedtext += currstr
+                    while draw.textsize(modifiedtext, font=font_type)[1] > height or \
+                            draw.textsize(modifiedtext, font=font_type)[0] > width:
+                        font_size -= 1
+                        font_type = ImageFont.truetype("../MemeCreatorBot/impact.ttf", font_size)
+            datas = im.getdata()
+            new_data = []
+            for item in datas:
+                if item[0] == 255 and item[1] == 255 and item[2] == 255:
+                    new_data.append((255, 255, 255, 0))
+                else:
+                    new_data.append(item)
+            im.putdata(new_data)
+            W, H = draw.textsize(modifiedtext, font=font_type)
+            draw.text(((width - W) / 2.0, (height - H) / 2.0), modifiedtext, fill=(0, 0, 0),
+                      font=font_type,
+                      spacing=3, align='center')
+            im.show()
+            self.text_img = ImageTk.PhotoImage(im)
+            self.canvas.create_image(self.x1, self.y1, anchor=NW, image=self.text_img)
+            del im
 
     def fix_pos(self, event):
         self.x1, self.y1 = event.x, event.y
-
 
 
 root = Tk()
