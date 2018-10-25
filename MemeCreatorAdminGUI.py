@@ -71,34 +71,32 @@ class Application:
         if self.y2 < self.y1:
             self.y1, self.y2 = self.y2, self.y1
         width, height = (self.x2 - self.x1), (self.y2 - self.y1)
-        print("w", width, "h", height)
         if width < 30 or height < 30:
             messagebox.showwarning("Small content area", "Content area is too small, please select larger area")
         else:
             font_size = 40
             font_type = ImageFont.truetype("../MemeCreatorBot/impact.ttf", font_size)
-
             im = Image.new("RGBA", (width, height), (255, 255, 255, 0))
             draw = ImageDraw.Draw(im)
             text = "testing text testing text testing text"
             modifiedtext = ''
-            words = text.split()
             currstr = ''
             if draw.textsize(text, font=font_type)[0] < width:
                 modifiedtext = text
             else:
-                for i in words:
-                    if draw.textsize(currstr, font=font_type)[0] + draw.textsize(i, font=font_type)[0] < width:
-                        currstr += i + ' '
+                words = text.split()
+                for i in range(len(words)):
+                    if draw.textsize(currstr, font=font_type)[0] + draw.textsize(words[i], font=font_type)[0] < width:
+                        currstr += words[i] + ' '
                     else:
                         modifiedtext += currstr + '\n'
-                        currstr = i + ' '
-                    if words.index(i) == len(words) - 1:
+                        currstr = words[i] + ' '
+                    if i == len(words) - 1:
                         modifiedtext += currstr
-                    while draw.textsize(modifiedtext, font=font_type)[1] > height or \
-                            draw.textsize(modifiedtext, font=font_type)[0] > width:
-                        font_size -= 1
-                        font_type = ImageFont.truetype("../MemeCreatorBot/impact.ttf", font_size)
+                while draw.textsize(modifiedtext, font=font_type)[1] > height or \
+                        draw.textsize(modifiedtext, font=font_type)[0] > width:
+                    font_size -= 1
+                    font_type = ImageFont.truetype("../MemeCreatorBot/impact.ttf", font_size)
             datas = im.getdata()
             new_data = []
             for item in datas:
@@ -112,6 +110,7 @@ class Application:
                       font=font_type,
                       spacing=3, align='center')
             im.show()
+
             self.text_img = ImageTk.PhotoImage(im)
             self.canvas.create_image(self.x1, self.y1, anchor=NW, image=self.text_img)
             del im
