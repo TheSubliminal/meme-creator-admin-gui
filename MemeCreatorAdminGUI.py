@@ -8,15 +8,15 @@ import math
 class Application:
     def __init__(self, root):
         self.root = root
-        self.size = (700, 700)
+        self.size = (900, 700)
         self.setup_gui()
         self.x1, self.x2, self.y2, self.y1 = 0, 0, 0, 0
         self.line1 = 0
         self.root.config(menu=self.menubar)
 
     def setup_gui(self):
-        self.canvas = Canvas(self.root, width=self.size[0], height=self.size[1], bd=2, relief="solid")
-        self.canvas.pack(side=TOP)
+        self.canvas = Canvas(self.root, width=self.size[0] - 200, height=self.size[1], bd=2, relief="solid")
+        self.canvas.pack(side=LEFT)
         self.canvas.bind("<Button-1>", self.fix_pos)
         self.canvas.bind("<B1-Motion>", self.draw_rect)
         self.canvas.bind("<ButtonRelease-1>", self.draw_final_rect)
@@ -31,20 +31,38 @@ class Application:
 
     def open_image(self):
         self.img = Image.open(filedialog.askopenfilename())
+        if not self.canvas.find_all():
+            self.toolbar = Frame(self.root)
+            self.toolbar.pack(side=RIGHT)
+            self.add_area_button = Button(self.toolbar, text="Add content area")
+            self.add_area_button.pack()
+            self.save_area_button = Button(self.toolbar, text="Save config for current content area")
+            self.save_area_button.pack()
+            self.rotate_label = Label(self.toolbar, text="Set the rotation of the area")
+            self.rotate_label.pack()
+            self.rotation = Scale(self.toolbar, from_=-180, to=180, tickinterval=180, orient=HORIZONTAL)
+            self.rotation.set(0)
+            self.rotation.pack()
+            self.entry_label = Label(self.toolbar, text="Test with text input")
+            self.entry_label.pack()
+            self.text_entry = Entry(self.toolbar)
+            self.text_entry.pack()
         if self.img.size[0] > self.size[0]:
-            wpercent = ((self.size[0]) / float(self.img.size[0]))
+            wpercent = ((self.size[0] - 200) / float(self.img.size[0]))
             hsize = int((float(self.img.size[1]) * float(wpercent)))
-            self.img = self.img.resize((self.size[0], hsize), Image.ANTIALIAS)
-        elif self.img.size[1] > self.size[1]:
+            self.img = self.img.resize((self.size[0] - 200, hsize), Image.ANTIALIAS)
+        if self.img.size[1] > self.size[1]:
             hpercent = ((self.size[1]) / float(self.img.size[1]))
-            wsize = int((float(self.img.size[0]) * float(hpercent)))
+            wsize = int((float(self.img.size[0] - 200) * float(hpercent)))
             self.img = self.img.resize((wsize, self.size[1]), Image.ANTIALIAS)
         self.meme = ImageTk.PhotoImage(self.img)
         self.canvas.delete(ALL)
-        self.canvas.create_image(self.size[0]/2.0, self.size[1]/2.0, anchor=CENTER, image=self.meme)
+        self.canvas.create_image((self.size[0] - 200)/2.0, self.size[1]/2.0, anchor=CENTER, image=self.meme)
+
 
     def close_image(self):
         self.canvas.delete(ALL)
+        self.toolbar.pack_forget()
 
     def clear_canvas(self, event):
         self.canvas.delete(self.line1)
@@ -107,8 +125,7 @@ class Application:
             im.putdata(new_data)
             W, H = draw.textsize(modifiedtext, font=font_type)
             draw.text(((width - W) / 2.0, (height - H) / 2.0), modifiedtext, fill=(0, 0, 0),
-                      font=font_type,
-                      spacing=3, align='center')
+                      font=font_type, spacing=3, align='center')
             im.show()
 
             self.text_img = ImageTk.PhotoImage(im)
