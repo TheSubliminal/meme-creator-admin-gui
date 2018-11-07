@@ -11,7 +11,7 @@ class Application:
         self.setup_gui()
         self.x1, self.x2, self.y2, self.y1 = 0, 0, 0, 0
         self.line1 = 0
-        self.areas_info = dict()
+        self.areas_info = []
         self.root.config(menu=self.menubar)
 
     def setup_gui(self):
@@ -48,7 +48,7 @@ class Application:
             self.add_area_button = Button(self.toolbar, text="Add content area")
             self.add_area_button.pack()
             self.save_area_button = Button(self.toolbar, text="Save config for current content area")
-            self.save_area_button.bind("<Button-1>", self.save_area)
+            self.save_area_button.bind("<Button-1>")
             self.save_area_button.pack()
             self.rotate_label = Label(self.toolbar, text="Set the rotation of the area")
             self.rotate_label.pack()
@@ -86,29 +86,32 @@ class Application:
         self.canvas.delete(self.line4)
 
     def draw_rect(self, event):
+        canvas = event.widget
         if self.canvas.find_all() and self.x1 != 0 and self.y1 != 0:
             if self.line1:
                 self.canvas.delete(self.line1)
                 self.canvas.delete(self.line2)
                 self.canvas.delete(self.line3)
                 self.canvas.delete(self.line4)
-            self.line1 = self.canvas.create_line(self.x1, self.y1, event.x, self.y1, dash=(12, 7), width=2)
-            self.line2 = self.canvas.create_line(self.x1, self.y1, self.x1, event.y, dash=(12, 7), width=2)
-            self.line3 = self.canvas.create_line(event.x, self.y1, event.x, event.y, dash=(12, 7), width=2)
-            self.line4 = self.canvas.create_line(self.x1, event.y, event.x, event.y, dash=(12, 7), width=2)
+            self.line1 = self.canvas.create_line(self.x1, self.y1, canvas.canvasx(event.x), self.y1, dash=(12, 7), width=2)
+            self.line2 = self.canvas.create_line(self.x1, self.y1, self.x1, canvas.canvasy(event.y), dash=(12, 7), width=2)
+            self.line3 = self.canvas.create_line(canvas.canvasx(event.x), self.y1, canvas.canvasx(event.x), canvas.canvasy(event.y), dash=(12, 7), width=2)
+            self.line4 = self.canvas.create_line(self.x1,canvas.canvasy(event.y), canvas.canvasx(event.x), canvas.canvasy(event.y), dash=(12, 7), width=2)
 
     def draw_final_rect(self, event):
-        self.x2, self.y2 = event.x, event.y
+        canvas = event.widget
+        self.x2, self.y2 = canvas.canvasx(event.x), canvas.canvasy(event.y)
 
     def fix_pos(self, event):
-        self.x1, self.y1 = event.x, event.y
+        canvas = event.widget
+        self.x1, self.y1 = canvas.canvasx(event.x), canvas.canvasy(event.y)
 
     def get_text(self, *args):
         if self.x2 < self.x1:
             self.x1, self.x2 = self.x2, self.x1
         if self.y2 < self.y1:
             self.y1, self.y2 = self.y2, self.y1
-        width, height = (self.x2 - self.x1), (self.y2 - self.y1)
+        width, height = int((self.x2 - self.x1)), int((self.y2 - self.y1))
         print ("x:", self.x1, "y:", self.y2, "width:", width, "height:", height)
         if width < 30 or height < 30:
             messagebox.showwarning("Small content area", "Content area is too small, please select larger area")
@@ -150,8 +153,6 @@ class Application:
             self.text_img = ImageTk.PhotoImage(im)
             self.canvas.create_image(self.x1, self.y1, anchor=NW, image=self.text_img)
             del im
-
-
 
 
 root = Tk()
