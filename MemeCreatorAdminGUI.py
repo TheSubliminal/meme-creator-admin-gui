@@ -74,8 +74,6 @@ class Application:
             black_button.pack()
             white_button = Radiobutton(self.toolbar, text="White", variable=self.text_color, value="(255, 255, 255)")
             white_button.pack()
-
-            white_button.pack()
         if self.text_entry:
             self.text_entry.delete(0, END)
         self.meme = ImageTk.PhotoImage(self.img)
