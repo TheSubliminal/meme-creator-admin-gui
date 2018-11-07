@@ -10,6 +10,7 @@ class Application:
         self.size = (300, 300)
         self.setup_gui()
         self.x1, self.x2, self.y2, self.y1 = 0, 0, 0, 0
+        self.text_color = "(0, 0, 0)"
         self.line1 = 0
         self.areas_info = []
         self.root.config(menu=self.menubar)
@@ -67,6 +68,14 @@ class Application:
             self.sv.trace_add("write", self.get_text)
             self.text_entry = Entry(self.toolbar, textvariable=self.sv)
             self.text_entry.pack()
+            rb_label = Label(self.toolbar, text="Select text color")
+            rb_label.pack()
+            black_button = Radiobutton(self.toolbar, text="Black", variable=self.text_color, value="(0, 0, 0)")
+            black_button.pack()
+            white_button = Radiobutton(self.toolbar, text="White", variable=self.text_color, value="(255, 255, 255)")
+            white_button.pack()
+
+            white_button.pack()
         if self.text_entry:
             self.text_entry.delete(0, END)
         self.meme = ImageTk.PhotoImage(self.img)
