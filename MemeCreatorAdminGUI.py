@@ -41,7 +41,13 @@ class Application:
 
     def open_image(self):
         self.img = Image.open(filedialog.askopenfilename())
-        self.canvas.config(width=self.img.width, height=self.img.height)
+        if self.img.width > self.root.winfo_screenwidth() or self.img.height > self.root.winfo_screenheight():
+            if self.img.width > self.root.winfo_screenwidth():
+                self.canvas.config(width=self.root.winfo_screenwidth(), height=self.img.height)
+            elif self.img.height > self.root.winfo_screenheight():
+                self.canvas.config(width=self.img.width, height=self.root.winfo_screenheight() - 110)
+        else:
+            self.canvas.config(width=self.img.width, height=self.img.height)
         if not self.canvas.find_all():
             self.toolbar = Frame(self.root)
             self.toolbar.pack(side=RIGHT)
@@ -61,14 +67,8 @@ class Application:
             self.sv.trace_add("write", self.get_text)
             self.text_entry = Entry(self.toolbar, textvariable=self.sv)
             self.text_entry.pack()
-        '''if self.img.size[0] > self.size[0]:
-            wpercent = ((self.size[0] - 200) / float(self.img.size[0]))
-            hsize = int((float(self.img.size[1]) * float(wpercent)))
-            self.img = self.img.resize((self.size[0] - 200, hsize), Image.ANTIALIAS)
-        if self.img.size[1] > self.size[1]:
-            hpercent = ((self.size[1]) / float(self.img.size[1]))
-            wsize = int((float(self.img.size[0] - 200) * float(hpercent)))
-            self.img = self.img.resize((wsize, self.size[1]), Image.ANTIALIAS)'''
+        if self.text_entry:
+            self.text_entry.delete(0, END)
         self.meme = ImageTk.PhotoImage(self.img)
         self.canvas.delete(ALL)
         self.canvas.create_image(self.img.width/2.0, self.img.height/2.0, anchor=CENTER, image=self.meme)
@@ -112,7 +112,7 @@ class Application:
         if self.y2 < self.y1:
             self.y1, self.y2 = self.y2, self.y1
         width, height = int((self.x2 - self.x1)), int((self.y2 - self.y1))
-        print ("x:", self.x1, "y:", self.y2, "width:", width, "height:", height)
+        print ("x:", self.x1, "y:", self.y1, "width:", width, "height:", height)
         if width < 30 or height < 30:
             messagebox.showwarning("Small content area", "Content area is too small, please select larger area")
         else:
