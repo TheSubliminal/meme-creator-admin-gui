@@ -75,9 +75,9 @@ class Application:
             delete_area_button = Button(self.toolbar, text="Delete content area")
             delete_area_button.bind("<Button-1>", self.delete_area)
             delete_area_button.grid(row=3, column=0)
-            save_area_button = Button(self.toolbar, text="Save current meme")
-            save_area_button.bind("<Button-1>", self.save_area)
-            save_area_button.grid(row=4, column=0, sticky=N)
+            save_meme_button = Button(self.toolbar, text="Save current meme")
+            save_meme_button.bind("<Button-1>", self.save_meme)
+            save_meme_button.grid(row=4, column=0, sticky=N)
             self.datalist = Listbox(self.toolbar, selectmode=EXTENDED)
             self.datalist.grid(row=2, column=1, rowspan=3, pady=(20, 0))
             rotate_label = Label(self.toolbar, text="Set the rotation of the area:")
@@ -111,7 +111,6 @@ class Application:
             self.areas_info[(self.width, self.height)] = (self.x1, self.y1)
             self.datalist.insert(END, "(" + str(self.width) + ", " + str(
                 self.height) + ")" + ": " + "(" + str(self.x1) + ", " + str(self.y1) + ")")
-            print(self.areas_info)
         else:
             messagebox.showwarning("No area was selected", "Please select an area on the picture")
 
@@ -127,7 +126,7 @@ class Application:
         else:
             messagebox.showwarning("Select area to delete", "Please, select area or areas in the list to delete")
 
-    def save_area(self, event):
+    def save_meme(self, event):
         if self.datalist.index(END) != 0 and self.meme_var_name.get() != "" and self.meme_name:
             self.class_data += (self.meme_var_name.get().strip() + " = Meme({")
             counter = 1
@@ -139,9 +138,17 @@ class Application:
             self.class_data += "}, 'impact.ttf', "
             self.class_data += self.text_color
             self.class_data += ")"
-            # print(self.class_data)
-            self.dict_data += (", '" + self.meme_name.get().strip().lower() + "': " + self.meme_var_name.get().strip())
-            # print(self.dict_data)
+            self.dict_data += ("'" + self.meme_name.get().strip().lower() + "': " + self.meme_var_name.get().strip())
+            file_name = filedialog.askopenfilename()
+            with open(file_name, "r", encoding="utf8") as in_file:
+                buffer = in_file.readlines()
+            with open(file_name, "w") as out_file:
+                for line in buffer:
+                    if line.startswith("Memes = {"):
+                        line = self.class_data + '\n' + line
+                    elif "#end" in line:
+                        line = "         " + self.dict_data + ", " + line.lstrip()
+                    out_file.write(line)
         else:
             messagebox.showwarning("No data to save", "Please input all the necessary data")
 
@@ -177,7 +184,7 @@ class Application:
 
     def draw_final_rect(self, event):
         canvas = event.widget
-        self.x2, self.y2 = canvas.canvasx(event.x), canvas.canvasy(event.y)
+        self.x2, self.y2 = int(canvas.canvasx(event.x)), int(canvas.canvasy(event.y))
         if self.x2 < self.x1:
             self.x1, self.x2 = self.x2, self.x1
         if self.y2 < self.y1:
