@@ -41,62 +41,73 @@ class Application:
         self.menubar.add_cascade(label="File", menu=filemenu)
 
     def open_image(self):
-        self.img = Image.open(filedialog.askopenfilename())
-        if self.img.width > self.root.winfo_screenwidth() or self.img.height > self.root.winfo_screenheight():
-            if self.img.width > self.root.winfo_screenwidth():
-                self.canvas.config(width=self.root.winfo_screenwidth(), height=self.img.height)
-            elif self.img.height > self.root.winfo_screenheight():
-                self.canvas.config(width=self.img.width, height=self.root.winfo_screenheight() - 110)
+        try:
+            img = Image.open(filedialog.askopenfilename())
+        except:
+            return
+        if img.width > self.root.winfo_screenwidth() or img.height > self.root.winfo_screenheight():
+            if img.width > self.root.winfo_screenwidth():
+                self.canvas.config(width=self.root.winfo_screenwidth(), height=img.height)
+            elif img.height > self.root.winfo_screenheight():
+                self.canvas.config(width=img.width, height=self.root.winfo_screenheight() - 110)
         else:
-            self.canvas.config(width=self.img.width, height=self.img.height)
+            self.canvas.config(width=img.width, height=img.height)
         if not self.canvas.find_all():
             self.toolbar = Frame(self.root)
             self.toolbar.pack(side=RIGHT)
             self.meme_name = StringVar()
             self.meme_var_name = StringVar()
             meme_name_label = Label(self.toolbar, text="Input the name of the meme")
-            meme_name_label.pack()
+            meme_name_label.grid(row=0, column=0)
             meme_name_input = Entry(self.toolbar, textvariable=self.meme_name)
-            meme_name_input.pack()
-            meme_var_name_label = Label(self.toolbar, text="Input the name of the variable, where the data will be stored in", wraplength=200)
-            meme_var_name_label.pack()
+            meme_name_input.grid(row=1, column=0)
+            meme_var_name_label = Label(self.toolbar,
+                                        text="Input the name of the variable, where the data will be stored in",
+                                        wraplength=200)
+            meme_var_name_label.grid(row=0, column=1)
             meme_var_name_input = Entry(self.toolbar, textvariable=self.meme_var_name)
-            meme_var_name_input.pack()
-            self.add_area_button = Button(self.toolbar, text="Add content area")
-            self.add_area_button.pack()
-            self.save_area_button = Button(self.toolbar, text="Save config for current content area")
-            self.save_area_button.bind("<Button-1>")
-            self.save_area_button.pack()
-            self.rotate_label = Label(self.toolbar, text="Set the rotation of the area")
-            self.rotate_label.pack()
-            self.rotation = Scale(self.toolbar, from_=-180, to=180, tickinterval=180, orient=HORIZONTAL, length=180)
-            self.rotation.set(0)
-            self.rotation.pack()
-            self.entry_label = Label(self.toolbar, text="Test with text input")
-            self.entry_label.pack()
+            meme_var_name_input.grid(row=1, column=1)
+            add_area_button = Button(self.toolbar, text="Add content area")
+            add_area_button.grid(row=2, column=0, sticky=S)
+            delete_area_button = Button(self.toolbar, text="Delete content area")
+            delete_area_button.grid(row=3, column=0)
+            save_area_button = Button(self.toolbar, text="Save current meme")
+            save_area_button.bind("<Button-1>")
+            save_area_button.grid(row=4, column=0, sticky=N)
+            datalist = Listbox(self.toolbar)
+            datalist.grid(row=2, column=1, rowspan=3, pady=(20, 0))
+            rotate_label = Label(self.toolbar, text="Set the rotation of the area:")
+            rotate_label.grid(row=5, columnspan=2, pady=10)
+            rotation = Scale(self.toolbar, from_=-180, to=180, tickinterval=180, orient=HORIZONTAL, length=180)
+            rotation.set(0)
+            rotation.grid(row=6, columnspan=2)
+            entry_label = Label(self.toolbar, text="Test with text input:")
+            entry_label.grid(row=7, columnspan=2, pady=10)
             self.sv = StringVar()
             self.sv.trace_add("write", self.get_text)
-            self.text_entry = Entry(self.toolbar, textvariable=self.sv)
-            self.text_entry.pack()
-            rb_label = Label(self.toolbar, text="Select text color")
-            rb_label.pack()
+            text_entry = Entry(self.toolbar, textvariable=self.sv)
+            text_entry.grid(row=8, columnspan=2)
+            rb_label = Label(self.toolbar, text="Select text color:")
+            rb_label.grid(row=9, columnspan=2, pady=(10, 0))
             black_button = Radiobutton(self.toolbar, text="Black", variable=self.text_color, value="(0, 0, 0)")
-            black_button.pack()
+            black_button.grid(row=10, column=0, pady=(0, 5))
             white_button = Radiobutton(self.toolbar, text="White", variable=self.text_color, value="(255, 255, 255)")
-            white_button.pack()
-
-            white_button.pack()
-        if self.text_entry:
-            self.text_entry.delete(0, END)
-        self.meme = ImageTk.PhotoImage(self.img)
+            white_button.grid(row=10, column=1, pady=(0, 5))
+        try:
+            text_entry.delete(0, END)
+        except:
+            pass
+        self.meme = ImageTk.PhotoImage(img)
         self.canvas.delete(ALL)
-        self.canvas.create_image(self.img.width/2.0, self.img.height/2.0, anchor=CENTER, image=self.meme)
+        self.canvas.create_image(img.width / 2.0, img.height / 2.0, anchor=CENTER, image=self.meme)
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
-
     def close_image(self):
-        self.canvas.delete(ALL)
-        self.toolbar.pack_forget()
+        if self.canvas.find_all():
+            self.canvas.delete(ALL)
+            self.toolbar.pack_forget()
+        else:
+            pass
 
     def clear_canvas(self, event):
         self.canvas.delete(self.line1)
@@ -112,10 +123,14 @@ class Application:
                 self.canvas.delete(self.line2)
                 self.canvas.delete(self.line3)
                 self.canvas.delete(self.line4)
-            self.line1 = self.canvas.create_line(self.x1, self.y1, canvas.canvasx(event.x), self.y1, dash=(12, 7), width=2)
-            self.line2 = self.canvas.create_line(self.x1, self.y1, self.x1, canvas.canvasy(event.y), dash=(12, 7), width=2)
-            self.line3 = self.canvas.create_line(canvas.canvasx(event.x), self.y1, canvas.canvasx(event.x), canvas.canvasy(event.y), dash=(12, 7), width=2)
-            self.line4 = self.canvas.create_line(self.x1,canvas.canvasy(event.y), canvas.canvasx(event.x), canvas.canvasy(event.y), dash=(12, 7), width=2)
+            self.line1 = self.canvas.create_line(self.x1, self.y1, canvas.canvasx(event.x), self.y1, dash=(12, 7),
+                                                 width=2)
+            self.line2 = self.canvas.create_line(self.x1, self.y1, self.x1, canvas.canvasy(event.y), dash=(12, 7),
+                                                 width=2)
+            self.line3 = self.canvas.create_line(canvas.canvasx(event.x), self.y1, canvas.canvasx(event.x),
+                                                 canvas.canvasy(event.y), dash=(12, 7), width=2)
+            self.line4 = self.canvas.create_line(self.x1, canvas.canvasy(event.y), canvas.canvasx(event.x),
+                                                 canvas.canvasy(event.y), dash=(12, 7), width=2)
 
     def draw_final_rect(self, event):
         canvas = event.widget
@@ -131,7 +146,6 @@ class Application:
         if self.y2 < self.y1:
             self.y1, self.y2 = self.y2, self.y1
         width, height = int((self.x2 - self.x1)), int((self.y2 - self.y1))
-        print ("x:", self.x1, "y:", self.y1, "width:", width, "height:", height)
         if width < 30 or height < 30:
             messagebox.showwarning("Small content area", "Content area is too small, please select larger area")
         else:
