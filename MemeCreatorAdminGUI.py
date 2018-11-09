@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw, ImageFont
+import math
 
 
 class Application:
@@ -11,6 +12,7 @@ class Application:
         self.setup_gui()
         self.x1, self.x2, self.y2, self.y1 = 0, 0, 0, 0
         self.text_color = "(0, 0, 0)"
+        self.rotation_deg = 0
         self.line1 = 0
         self.areas_info = dict()
         self.class_data = ""
@@ -69,20 +71,17 @@ class Application:
             meme_var_name_label.grid(row=0, column=1)
             meme_var_name_input = Entry(self.toolbar, textvariable=self.meme_var_name)
             meme_var_name_input.grid(row=1, column=1)
-            add_area_button = Button(self.toolbar, text="Add content area")
-            add_area_button.bind("<Button-1>", self.add_area)
+            add_area_button = Button(self.toolbar, text="Add content area", command=self.add_area)
             add_area_button.grid(row=2, column=0, sticky=S)
-            delete_area_button = Button(self.toolbar, text="Delete content area")
-            delete_area_button.bind("<Button-1>", self.delete_area)
+            delete_area_button = Button(self.toolbar, text="Delete content area", command=self.delete_area)
             delete_area_button.grid(row=3, column=0)
-            save_meme_button = Button(self.toolbar, text="Save current meme")
-            save_meme_button.bind("<Button-1>", self.save_meme)
+            save_meme_button = Button(self.toolbar, text="Save current meme", command=self.save_meme)
             save_meme_button.grid(row=4, column=0, sticky=N)
             self.datalist = Listbox(self.toolbar, selectmode=EXTENDED)
             self.datalist.grid(row=2, column=1, rowspan=3, pady=(20, 0))
             rotate_label = Label(self.toolbar, text="Set the rotation of the area:")
             rotate_label.grid(row=5, columnspan=2, pady=10)
-            rotation = Scale(self.toolbar, from_=-180, to=180, tickinterval=180, orient=HORIZONTAL, length=180)
+            rotation = Scale(self.toolbar, from_=-180, to=180, tickinterval=180, orient=HORIZONTAL, length=180, command=self.rotate_area)
             rotation.set(0)
             rotation.grid(row=6, columnspan=2)
             entry_label = Label(self.toolbar, text="Test with text input:")
@@ -106,7 +105,8 @@ class Application:
         self.canvas.create_image(img.width / 2.0, img.height / 2.0, anchor=CENTER, image=self.meme)
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
-    def add_area(self, event):
+    # Adding selected area to the areas' dictionary
+    def add_area(self):
         if self.x1 > 0 and self.x2 > 0 and self.y1 > 0 and self.y2 > 0:
             self.areas_info[(self.width, self.height)] = (self.x1, self.y1)
             self.datalist.insert(END, "(" + str(self.width) + ", " + str(
@@ -114,7 +114,8 @@ class Application:
         else:
             messagebox.showwarning("No area was selected", "Please select an area on the picture")
 
-    def delete_area(self, event):
+    # Deleting area, selected in the listbox, from the dictionary of areas
+    def delete_area(self):
         if self.datalist.curselection():
             selection = self.datalist.curselection()
             for i in selection[::-1]:
@@ -126,7 +127,8 @@ class Application:
         else:
             messagebox.showwarning("Select area to delete", "Please, select area or areas in the list to delete")
 
-    def save_meme(self, event):
+    # Save collected data to the MemeCreatorBot source file
+    def save_meme(self):
         if self.datalist.index(END) != 0 and self.meme_var_name.get() != "" and self.meme_name:
             self.class_data += (self.meme_var_name.get().strip() + " = Meme({")
             counter = 1
@@ -152,6 +154,31 @@ class Application:
         else:
             messagebox.showwarning("No data to save", "Please input all the necessary data")
 
+    # Rotate selected area for the given number of degrees
+    def rotate_area(self, value):
+        self.rotation_deg = int(value)
+        center = ((self.x2-self.x1)//2, (self.y2-self.y1)//2)
+        points = [(self.x1, self.y1), (self.x1, self.y2), (self.x2, self.y1), (self.x2, self.y2)]
+        rotated_points = []
+        for point in points:
+            tempX = point[0] - center[0]
+            tempY = point[1] - center[1]
+            rotatedX = tempX * math.cos(self.rotation_deg * (math.pi/180)) - tempY * math.sin(self.rotation_deg * (math.pi/180))
+            rotatedY = tempX * math.sin(self.rotation_deg * (math.pi/180)) + tempY * math.cos(self.rotation_deg * (math.pi/180))
+            rotated_points.append((rotatedX + center[0], rotatedY + center[1]))
+        if self.canvas.find_all() and self.x1 != 0 and self.y1 != 0:
+            if self.line1:
+                self.canvas.delete(self.line1)
+                self.canvas.delete(self.line2)
+                self.canvas.delete(self.line3)
+                self.canvas.delete(self.line4)
+            self.line1 = self.canvas.create_line(rotated_points[0], rotated_points[2], dash=(12, 7), width=2)
+            self.line2 = self.canvas.create_line(rotated_points[0], rotated_points[1], dash=(12, 7), width=2)
+            self.line3 = self.canvas.create_line(rotated_points[2], rotated_points[3], dash=(12, 7), width=2)
+            self.line4 = self.canvas.create_line(rotated_points[1], rotated_points[3], dash=(12, 7), width=2)
+
+
+    # Clear the canvas from the contents and hide the toolbar
     def close_image(self):
         if self.canvas.find_all():
             self.canvas.delete(ALL)
