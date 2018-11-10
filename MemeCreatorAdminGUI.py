@@ -11,7 +11,7 @@ class Application:
         self.size = (300, 300)
         self.setup_gui()
         self.x1, self.x2, self.y2, self.y1 = 0, 0, 0, 0
-        self.text_color = "(0, 0, 0)"
+        self.text_color = StringVar()
         self.rotation_deg = 0
         self.line1 = 0
         self.areas_info = dict()
@@ -96,6 +96,7 @@ class Application:
             black_button.grid(row=10, column=0, pady=(0, 5))
             white_button = Radiobutton(self.toolbar, text="White", variable=self.text_color, value="(255, 255, 255)")
             white_button.grid(row=10, column=1, pady=(0, 5))
+            black_button.select()
         try:
             text_entry.delete(0, END)
         except:
@@ -138,7 +139,7 @@ class Application:
                 if counter <= len(self.areas_info):
                     self.class_data += ", "
             self.class_data += "}, 'impact.ttf', "
-            self.class_data += self.text_color
+            self.class_data += self.text_color.get()
             self.class_data += ")"
             self.dict_data += ("'" + self.meme_name.get().strip().lower() + "': " + self.meme_var_name.get().strip())
             file_name = filedialog.askopenfilename()
@@ -157,7 +158,7 @@ class Application:
     # Rotate selected area for the given number of degrees
     def rotate_area(self, value):
         self.rotation_deg = int(value)
-        center = ((self.x2-self.x1)//2, (self.y2-self.y1)//2)
+        center = (self.x1 + (self.x2-self.x1)/2, self.y1 + (self.y2-self.y1)/2)
         points = [(self.x1, self.y1), (self.x1, self.y2), (self.x2, self.y1), (self.x2, self.y2)]
         rotated_points = []
         for point in points:
@@ -227,6 +228,10 @@ class Application:
             messagebox.showwarning("Small content area", "Content area is too small, please select larger area")
         else:
             font_size = 40
+            if self.text_color.get() == "(0, 0, 0)":
+                txt_color = (0, 0, 0)
+            else:
+                txt_color = (255, 255, 255)
             font_type = ImageFont.truetype("../MemeCreatorBot/impact.ttf", font_size)
             im = Image.new("RGBA", (self.width, self.height), (255, 255, 255, 0))
             draw = ImageDraw.Draw(im)
@@ -258,7 +263,7 @@ class Application:
                     new_data.append(item)
             im.putdata(new_data)
             W, H = draw.textsize(modifiedtext, font=font_type)
-            draw.text(((self.width - W) / 2.0, (self.height - H) / 2.0), modifiedtext, fill=(0, 0, 0),
+            draw.text(((self.width - W) / 2.0, (self.height - H) / 2.0), modifiedtext, fill=txt_color,
                       font=font_type, spacing=3, align='center')
             self.text_img = ImageTk.PhotoImage(im)
             self.canvas.create_image(self.x1, self.y1, anchor=NW, image=self.text_img)
